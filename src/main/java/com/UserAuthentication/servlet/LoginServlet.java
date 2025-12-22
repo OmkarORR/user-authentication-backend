@@ -17,9 +17,14 @@ import java.sql.ResultSet;
 @WebServlet("/LoginServlet")
 public class LoginServlet extends HttpServlet {
 
-    private final String url = "jdbc:mysql://localhost:3306/userdetails";
-    private final String username = "root";
-    private final String password = "Omkar@123";
+    String host = System.getenv("MYSQLHOST");
+    String port = System.getenv("MYSQLPORT");
+    String db   = System.getenv("MYSQLDATABASE");
+    String user = System.getenv("MYSQLUSER");
+    String pass = System.getenv("MYSQLPASSWORD");
+
+    String url = "jdbc:mysql://" + host + ":" + port + "/" + db +
+            "?useSSL=false&allowPublicKeyRetrieval=true";
 
     public void doOptions(HttpServletRequest request, HttpServletResponse response) throws IOException {
         setCorsheader(response);
@@ -38,7 +43,7 @@ public class LoginServlet extends HttpServlet {
             LoginRequest loginRequest = gson.fromJson(sb.toString(), LoginRequest.class);
 
             Class.forName("com.mysql.cj.jdbc.Driver");
-            Connection conn = DriverManager.getConnection(url, username, password);
+            Connection conn = DriverManager.getConnection(url, user, pass);
 
             String sql = "SELECT * FROM users WHERE username = ?";
             PreparedStatement stmt = conn.prepareStatement(sql);

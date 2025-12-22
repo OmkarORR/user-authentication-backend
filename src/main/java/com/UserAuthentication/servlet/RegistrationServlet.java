@@ -17,9 +17,15 @@ import java.sql.PreparedStatement;
 public class RegistrationServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
 
-    private String url = "jdbc:mysql://localhost:3306/userdetails";
-    private String username = "root";
-    private String password = "Omkar@123";
+    String host = System.getenv("MYSQLHOST");
+    String port = System.getenv("MYSQLPORT");
+    String db   = System.getenv("MYSQLDATABASE");
+    String User = System.getenv("MYSQLUSER");
+    String pass = System.getenv("MYSQLPASSWORD");
+
+    String url = "jdbc:mysql://" + host + ":" + port + "/" + db +
+            "?useSSL=false&allowPublicKeyRetrieval=true";
+
 
     protected void doOptions(HttpServletRequest request, HttpServletResponse response) throws IOException{
         setCorsHeaders(response);
@@ -46,7 +52,7 @@ public class RegistrationServlet extends HttpServlet {
             }
 
             Class.forName("com.mysql.cj.jdbc.Driver");
-            Connection conn = DriverManager.getConnection(url, username,password);
+            Connection conn = DriverManager.getConnection(url, User,pass);
 
             String sql = "INSERT INTO users (name, email, username, password, retypepassword) VALUES (? , ? , ? , ?, ?)";
             PreparedStatement stmt = conn.prepareStatement(sql);
