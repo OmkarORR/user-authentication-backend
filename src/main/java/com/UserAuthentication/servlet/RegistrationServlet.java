@@ -1,11 +1,11 @@
 package com.UserAuthentication.servlet;
 
 import com.google.gson.Gson;
-import jakarta.servlet.ServletException;
-import jakarta.servlet.annotation.WebServlet;
-import jakarta.servlet.http.HttpServlet;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
+
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -13,90 +13,80 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 
-@WebServlet("/RegistrationServlet")
+@WebServlet("/RegisterServlet")
 public class RegistrationServlet extends HttpServlet {
-    private static final long serialVersionUID = 1L;
 
-    String host = System.getenv("MYSQLHOST");
-    String port = System.getenv("MYSQLPORT");
-    String db   = System.getenv("MYSQLDATABASE");
-    String User = System.getenv("MYSQLUSER");
-    String pass = System.getenv("MYSQLPASSWORD");
-
-    String url = "jdbc:mysql://" + host + ":" + port + "/" + db +
-            "?useSSL=false&allowPublicKeyRetrieval=true";
-
-
-    protected void doOptions(HttpServletRequest request, HttpServletResponse response) throws IOException{
-        setCorsHeaders(response);
-        response.setStatus(HttpServletResponse.SC_OK);
+    @Override
+    protected void doGet(HttpServletRequest request, HttpServletResponse response)
+            throws IOException {
+        response.setContentType("text/plain");
+        response.getWriter().write("Registration servlet is running");
     }
-    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException{
+
+    protected void doPost(HttpServletRequest request, HttpServletResponse response)
+            throws IOException {
+
         setCorsHeaders(response);
-        try{
 
-            StringBuilder sb = new StringBuilder();
+        try {
             BufferedReader reader = request.getReader();
-            String line;
-
-            while ((line = reader.readLine()) != null){
-                sb.append(line);
-            }
             Gson gson = new Gson();
-            User user = gson.fromJson(sb.toString(), User.class);
+            User user = gson.fromJson(reader, User.class);
 
-            if (!user.getPassword().equals(user.getRetypepassword())) {
-                response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            if (!user.password.equals(user.retypepassword)) {
+                response.setStatus(400);
                 response.getWriter().write("Passwords do not match");
                 return;
             }
 
             Class.forName("com.mysql.cj.jdbc.Driver");
-            Connection conn = DriverManager.getConnection(url, User,pass);
 
-            String sql = "INSERT INTO users (name, email, username, password, retypepassword) VALUES (? , ? , ? , ?, ?)";
-            PreparedStatement stmt = conn.prepareStatement(sql);
-            stmt.setString(1, user.getName());
-            stmt.setString(2, user.getEmail());
-            stmt.setString(3, user.getUsername());
-            stmt.setString(4, user.getPassword());
-            stmt.setString(5, user.getRetypepassword());
+            String url = "jdbc:mysql://mysql-omkar-user-auth.alwaysdata.net:3306/omkar-user-auth_db" +
+                            "?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC";
+            String dbUser = "448170";
+            String dbPass = "Omkar@123";
 
-            int rowsInserted = stmt.executeUpdate();
+            Connection conn = DriverManager.getConnection(url, dbUser, dbPass);
 
-            if(rowsInserted > 0){
-                response.setStatus(HttpServletResponse.SC_OK);
-            }else{
-                response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            }
+            PreparedStatement ps = conn.prepareStatement(
+                    "INSERT INTO users (name, email, username, password) VALUES (?, ?, ?, ?)"
+            );
 
-            stmt.close();
+            ps.setString(1, user.name);
+            ps.setString(2, user.email);
+            ps.setString(3, user.username);
+            ps.setString(4, user.password);
+
+            ps.executeUpdate();
+
+            response.setStatus(200);
+            response.getWriter().write("Registration successful");
+
             conn.close();
 
         } catch (Exception e) {
             e.printStackTrace();
-            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            response.setStatus(500);
+            response.getWriter().write("Server error");
         }
     }
-    public void setCorsHeaders(HttpServletResponse response){
-        response.setHeader("Access-Control-Allow-Origin", "*");
-        response.setHeader("Access-Control-Allow-Methods", "POST, GET, OPTIONS");
-        response.setHeader("Access-Control-Allow-Headers", "Content-Type");
+
+    protected void doOptions(HttpServletRequest request, HttpServletResponse response) {
+        setCorsHeaders(response);
+        response.setStatus(200);
     }
 
-    public class User{
-        private String name;
-        private String email;
-        private String username;
-        private String password;
-        private String retypepassword;
-
-        public String getName() { return name; }
-        public String getEmail() { return email; }
-        public String getUsername() { return username; }
-        public String getPassword() { return password; }
-        public String getRetypepassword(){return retypepassword;}
-
+    private void setCorsHeaders(HttpServletResponse res) {
+        res.setHeader("Access-Control-Allow-Origin", "*");
+        res.setHeader("Access-Control-Allow-Methods", "POST, GET, OPTIONS");
+        res.setHeader("Access-Control-Allow-Headers", "Content-Type");
     }
 
+    static class User {
+        String name;
+        String email;
+        String username;
+        String password;
+        String retypepassword;
+    }
 }

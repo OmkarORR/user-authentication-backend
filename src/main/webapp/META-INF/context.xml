@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Context>
+    <Resource
+            name="jdbc/UserAuthDB"
+            auth="Container"
+            type="javax.sql.DataSource"
+            maxTotal="20"
+            maxIdle="10"
+            maxWaitMillis="-1"
+            username="448170"
+            password="Omkar@123"
+            driverClassName="com.mysql.cj.jdbc.Driver"
+            url="jdbc:mysql://mysql-omkar-user-auth.alwaysdata.net:3306/omkar-user-auth_db?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC"
+    />
+</Context>
